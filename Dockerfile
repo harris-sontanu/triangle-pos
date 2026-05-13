@@ -8,8 +8,13 @@ RUN apt-get update && apt-get install -y \
   libjpeg62-turbo-dev \
   libfreetype6-dev \
   zip \
-  git 
+  git \
+  curl \
+  gnupg
 
+# Install Node.js
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs
 # Configure and install php extensions
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 RUN docker-php-ext-install mysqli pdo pdo_mysql zip gd exif
