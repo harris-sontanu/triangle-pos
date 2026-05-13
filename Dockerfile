@@ -33,4 +33,3 @@ RUN composer install --ignore-platform-reqs
 RUN chmod +x /app/docker-startup.sh
 
 ENTRYPOINT [ "/app/docker-startup.sh" ]
-
