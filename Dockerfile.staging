@@ -1,56 +1,76 @@
-# Stage 1: Build assets
-FROM node:18-alpine as build-stage
+# Stage 1: Build Composer Dependencies
+FROM composer:2.7 AS vendor
+WORKDIR /app
+COPY database/ database/
+COPY composer.json composer.lock ./
+RUN composer install \
+    --ignore-platform-reqs \
+    --no-interaction \
+    --no-plugins \
+    --no-scripts \
+    --prefer-dist
+
+# Stage 2: Build Frontend Assets
+FROM node:20 AS frontend
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 COPY . .
+# Copy vendor dependencies because Tailwind/Vite (Filament theme) needs them to build
+COPY --from=vendor /app/vendor/ /app/vendor/
 RUN npm run build
 
-# Stage 2: Runtime PHP-FPM
+# Stage 3: Final Production Image
 FROM php:8.1-fpm
-
-WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    libzip-dev \
+    nginx \
     libpng-dev \
-    libjpeg62-turbo-dev \
+    libjpeg-dev \
     libfreetype6-dev \
+    libwebp-dev \
+    libonig-dev \
+    libxml2-dev \
+    libzip-dev \
     libicu-dev \
-    libgmp-dev \
     zip \
+    unzip \
     git \
+    supervisor \
     curl \
-    gnupg
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Configure and install php extensions
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg
-RUN docker-php-ext-install mysqli pdo pdo_mysql zip gd exif bcmath intl sockets pcntl posix gmp
+# Configure and install PHP extensions
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) pdo_mysql exif pcntl bcmath gd intl zip
 
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+# Configure Nginx
+COPY ./docker/nginx/staging.conf /etc/nginx/sites-enabled/default
 
-# Install composer
-RUN curl -sS https://getcomposer.org/installer | php -- \
-    --install-dir=/usr/bin --filename=composer
+# Configure Supervisor
+COPY ./docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
-# Copy application code
-COPY . /app
+# Set working directory
+WORKDIR /var/www/html
 
-# Copy built assets from build-stage
-COPY --from=build-stage /app/public/build /app/public/build
+# Copy application files
+COPY . .
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
+# Copy vendor dependencies
+COPY --from=vendor /app/vendor/ /var/www/html/vendor/
 
-# Save public and storage directory for volume sync at runtime
-RUN cp -r /app/public /app/public-docker && \
-    cp -r /app/storage /app/storage-docker
+# Copy frontend build
+COPY --from=frontend /app/public/build/ /var/www/html/public/build/
 
-# Set permissions
-RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
+# Set appropriate permissions
+RUN chown -R www-data:www-data /var/www/html
 
-# Give execute permission to startup script
-RUN chmod +x /app/docker-startup.staging.sh
+# Copy and make entrypoint executable
+COPY ./docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
-ENTRYPOINT [ "/app/docker-startup.staging.sh" ]
+EXPOSE 80
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
