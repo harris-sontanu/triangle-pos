@@ -3,38 +3,27 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.staging
-    restart: always
-    env_file:
-      - .env
-    volumes:
-      - public_data:/app/public
-      - storage_data:/app/storage
-    depends_on:
-      - db
-
-  web:
-    image: nginx:alpine
-    restart: always
-    expose:
-      - "80"
-    volumes:
-      - public_data:/app/public:ro
-      - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
-    depends_on:
-      - app
-
-  db:
-    image: mysql:8.0
-    restart: always
+    restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ${DB_DATABASE:-triangle_pos}
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
-      MYSQL_USER: ${DB_USERNAME:-laravel}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-root}
+      - APP_ENV=production
+      - APP_DEBUG=false
+      # Anda bisa menambahkan variabel .env lainnya di sini atau di UI Dokploy
     volumes:
-      - db_data:/var/lib/mysql
+      - staging_storage:/var/www/html/storage
+      - staging_bootstrap:/var/www/html/bootstrap/cache
+    networks:
+      - dokploy-network
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    networks:
+      - dokploy-network
 
 volumes:
-  public_data:
-  storage_data:
-  db_data:
+  staging_storage:
+  staging_bootstrap:
+
+networks:
+  dokploy-network:
+    external: true
