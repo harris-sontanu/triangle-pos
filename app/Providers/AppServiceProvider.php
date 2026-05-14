@@ -18,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->enforceSecureUrls();
+        //
     }
 
     /**
@@ -28,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $this->enforceSecureUrls();
+
         Model::preventLazyLoading(!app()->isProduction());
 
         Gate::define('viewLogViewer', function (?User $user) {
