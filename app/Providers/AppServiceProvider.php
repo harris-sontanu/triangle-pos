@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
-use Opcodes\LogViewer\Facades\LogViewer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,13 +27,6 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         Model::preventLazyLoading(!app()->isProduction());
-
-        LogViewer::auth(function ($request) {
-            return $request->user()
-                && in_array($request->user()->email, [
-                    'super.admin@test.com',
-                ]);
-        });
     }
 
     /**
