@@ -332,3 +332,11 @@
         @endcan
     </li>
 @endcan
+
+@can('viewLogViewer')
+    <li class="c-sidebar-nav-item">
+        <a class="c-sidebar-nav-link" href="{{ url('log-viewer') }}" target="_blank">
+            <i class="c-sidebar-nav-icon bi bi-journal-text" style="line-height: 1;"></i> Logs
+        </a>
+    </li>
+@endcan
