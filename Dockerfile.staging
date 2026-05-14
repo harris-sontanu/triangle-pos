@@ -43,8 +43,9 @@ COPY --from=build-stage /app/public/build /app/public/build
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --ignore-platform-reqs
 
-# Save public directory for volume sync at runtime
-RUN cp -r /app/public /app/public-docker
+# Save public and storage directory for volume sync at runtime
+RUN cp -r /app/public /app/public-docker && \
+    cp -r /app/storage /app/storage-docker
 
 # Set permissions
 RUN chown -R www-data:www-data /app/storage /app/bootstrap/cache
