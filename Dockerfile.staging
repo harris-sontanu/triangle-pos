@@ -39,6 +39,13 @@ RUN apt-get update && apt-get install -y \
     git \
     supervisor \
     curl \
+    libxrender1 \
+    libfontconfig1 \
+    libxext6 \
+    libssl-dev \
+    fontconfig \
+    xfonts-75dpi \
+    xfonts-base \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Configure and install PHP extensions
@@ -64,7 +71,15 @@ COPY --from=vendor /app/vendor/ /var/www/html/vendor/
 COPY --from=frontend /app/public/build/ /var/www/html/public/build/
 
 # Set appropriate permissions
-RUN chown -R www-data:www-data /var/www/html
+RUN mkdir -p storage/app/public \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/testing \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache && \
+    chown -R www-data:www-data /var/www/html && \
+    chmod -R 775 storage bootstrap/cache
 
 # Copy and make entrypoint executable
 COPY ./docker/entrypoint.sh /usr/local/bin/entrypoint.sh
