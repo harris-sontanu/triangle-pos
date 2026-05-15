@@ -6,7 +6,6 @@ services:
     restart: unless-stopped
     environment:
       - APP_ENV=production
-      - APP_DEBUG=false
       # Anda bisa menambahkan variabel .env lainnya di sini atau di UI Dokploy
     volumes:
       - staging_storage:/var/www/html/storage
