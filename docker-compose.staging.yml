@@ -6,22 +6,29 @@ services:
     restart: unless-stopped
     environment:
       - APP_ENV=production
+      - MAIL_HOST=mailpit
+      - MAIL_PORT=1025
       # Anda bisa menambahkan variabel .env lainnya di sini atau di UI Dokploy
     volumes:
       - staging_storage:/var/www/html/storage
       - staging_bootstrap:/var/www/html/bootstrap/cache
+    depends_on:
+      - mailpit
     networks:
       - dokploy-network
 
   mailpit:
     image: axllent/mailpit:latest
     restart: unless-stopped
+    volumes:
+      - staging_mailpit:/data
     networks:
       - dokploy-network
 
 volumes:
   staging_storage:
   staging_bootstrap:
+  staging_mailpit:
 
 networks:
   dokploy-network:
