@@ -29,7 +29,7 @@ class PosController extends Controller
 
 
     public function store(StorePosSaleRequest $request) {
-        DB::transaction(function () use ($request) {
+        $sale = DB::transaction(function () use ($request) {
             $due_amount = $request->total_amount - $request->paid_amount;
 
             if ($due_amount == $request->total_amount) {
@@ -91,9 +91,15 @@ class PosController extends Controller
                     'payment_method' => $request->payment_method
                 ]);
             }
+
+            return $sale;
         });
 
         toast('POS Sale Created!', 'success');
+
+        if ($request->has('print')) {
+            return redirect()->route('sales.pos.pdf', $sale->id);
+        }
 
         return redirect()->route('sales.index');
     }

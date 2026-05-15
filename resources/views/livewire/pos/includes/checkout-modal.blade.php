@@ -99,6 +99,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="submit" class="btn btn-primary">Submit</button>
+                    <button type="submit" name="print" value="1" class="btn btn-info">Submit & Print</button>
                 </div>
             </form>
         </div>
