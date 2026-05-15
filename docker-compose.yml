@@ -11,6 +11,9 @@ services:
       - .:/app
     depends_on:
       - db
+      - mailpit
+    networks:
+      - triangle-network
 
   db:
     platform: "linux/amd64"
@@ -26,6 +29,24 @@ services:
       - "3306:3306"
     volumes:
       - dbdata:/var/lib/mysql
+    networks:
+      - triangle-network
+
+  mailpit:
+    image: 'axllent/mailpit:latest'
+    container_name: triangle-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    volumes:
+      - mailpit_data:/data
+    networks:
+      - triangle-network
+
+networks:
+  triangle-network:
+    driver: bridge
 
 volumes:
   dbdata:
+  mailpit_data:
