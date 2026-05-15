@@ -10,7 +10,14 @@ RUN apt-get update && apt-get install -y \
   zip \
   git \
   curl \
-  gnupg
+  gnupg \
+  libxrender1 \
+  libfontconfig1 \
+  libxext6 \
+  libssl-dev \
+  fontconfig \
+  xfonts-75dpi \
+  xfonts-base
 
 # Install Node.js
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
@@ -26,6 +33,16 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
   --install-dir=/usr/bin --filename=composer
 
 COPY . /app
+
+# Create necessary storage directories for Laravel
+RUN mkdir -p storage/app/public \
+    storage/framework/cache/data \
+    storage/framework/sessions \
+    storage/framework/testing \
+    storage/framework/views \
+    storage/logs \
+    bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache
 
 RUN composer install --ignore-platform-reqs
 
