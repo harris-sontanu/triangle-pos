@@ -1,7 +1,0 @@
-.git
-node_modules
-vendor
-storage
-.env
-.phpunit.result.cache
-
