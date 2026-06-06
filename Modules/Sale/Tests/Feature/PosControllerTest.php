@@ -63,6 +63,7 @@ class PosControllerTest extends TestCase
             'name'    => $product->product_name,
             'qty'     => 1,
             'price'   => $product->product_price,
+            'weight'  => 0,
             'options' => [
                 'code'             => $product->product_code,
                 'unit_price'       => $product->product_price,
@@ -124,6 +125,7 @@ class PosControllerTest extends TestCase
             'name'    => $product->product_name,
             'qty'     => 1,
             'price'   => $product->product_price,
+            'weight'  => 0,
             'options' => [
                 'code'             => $product->product_code,
                 'unit_price'       => $product->product_price,
@@ -148,5 +150,69 @@ class PosControllerTest extends TestCase
 
         $sale = Sale::first();
         $response->assertRedirect(route('sales.pos.pdf', $sale->id));
+    }
+
+    /** @test */
+    public function it_sets_status_to_pending_when_paid_amount_is_zero()
+    {
+        $customer = Customer::create([
+            'customer_name' => 'Test Customer',
+            'customer_email' => 'test@example.com',
+            'customer_phone' => '123456789',
+            'city' => 'Test City',
+            'country' => 'Test Country',
+            'address' => 'Test Address'
+        ]);
+
+        $category = Category::create([
+            'category_name' => 'Test Category',
+            'category_code' => 'TC01'
+        ]);
+
+        $product = Product::create([
+            'product_name' => 'Test Product',
+            'product_code' => 'TP01',
+            'product_quantity' => 10,
+            'product_cost' => 100,
+            'product_price' => 200,
+            'product_unit' => 'pc',
+            'product_stock_alert' => 1,
+            'category_id' => $category->id
+        ]);
+
+        Cart::instance('sale')->add([
+            'id'      => $product->id,
+            'name'    => $product->product_name,
+            'qty'     => 1,
+            'price'   => $product->product_price,
+            'weight'  => 0,
+            'options' => [
+                'code'             => $product->product_code,
+                'unit_price'       => $product->product_price,
+                'sub_total'        => $product->product_price,
+                'product_discount' => 0,
+                'product_discount_type' => 'fixed',
+                'product_tax'      => 0,
+            ]
+        ]);
+
+        $response = $this->post(route('app.pos.store'), [
+            'customer_id' => $customer->id,
+            'tax_percentage' => 0,
+            'discount_percentage' => 0,
+            'shipping_amount' => 0,
+            'total_amount' => 200,
+            'paid_amount' => 0,
+            'payment_method' => 'Cash',
+            'note' => 'Test Zero Payment'
+        ]);
+
+        $response->assertRedirect(route('sales.index'));
+        $this->assertDatabaseHas('sales', [
+            'customer_id' => $customer->id,
+            'paid_amount' => 0,
+            'status' => 'Pending',
+            'payment_status' => 'Unpaid',
+        ]);
     }
 }
