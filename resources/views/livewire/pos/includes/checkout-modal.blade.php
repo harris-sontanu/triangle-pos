@@ -37,8 +37,8 @@
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label for="paid_amount">Received Amount <span class="text-danger">*</span></label>
-                                        <input id="paid_amount" type="text" class="form-control" name="paid_amount" value="{{ $total_amount }}" required>
+                                        <label for="paid_amount">Received Amount</label>
+                                        <input id="paid_amount" type="text" class="form-control" name="paid_amount" value="{{ $total_amount }}">
                                     </div>
                                 </div>
                             </div>
