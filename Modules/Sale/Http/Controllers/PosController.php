@@ -34,10 +34,13 @@ class PosController extends Controller
 
             if ($due_amount == $request->total_amount) {
                 $payment_status = 'Unpaid';
+                $status = 'Pending';
             } elseif ($due_amount > 0) {
                 $payment_status = 'Partial';
+                $status = 'Completed';
             } else {
                 $payment_status = 'Paid';
+                $status = 'Completed';
             }
 
             $sale = Sale::create([
@@ -51,7 +54,7 @@ class PosController extends Controller
                 'paid_amount' => $request->paid_amount * 100,
                 'total_amount' => $request->total_amount * 100,
                 'due_amount' => $due_amount * 100,
-                'status' => 'Completed',
+                'status' => $status,
                 'payment_status' => $payment_status,
                 'payment_method' => $request->payment_method,
                 'note' => $request->note,
